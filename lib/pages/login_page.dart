@@ -1,18 +1,48 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:social_media_app/components/my_back_button.dart';
 import 'package:social_media_app/components/my_button.dart';
 import 'package:social_media_app/components/my_textfield.dart';
+import 'package:social_media_app/helper/helper_function.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  final void Function()? onTap;
+
+  const LoginPage({super.key, required this.onTap});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   //text controller
   final TextEditingController emailController = TextEditingController();
+
   final TextEditingController passwordController = TextEditingController();
 
   // login method
-  void login() {}
+  void login() async {
+    // show loading circle
+    showDialog(
+      context: context,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
 
-  final void Function()? onTap;
+    // try sign in
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text, password: passwordController.text);
 
-  LoginPage({super.key, required this.onTap});
+      // pop loading circle
+      if (context.mounted) Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      // pop loading circle
+      Navigator.pop(context);
+      displayMessageToUser(e.code, context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +54,9 @@ class LoginPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // back button
+              MyBackButton(),
+
               // logo
               Icon(
                 Icons.person,
@@ -45,7 +78,7 @@ class LoginPage extends StatelessWidget {
 
               // email textfield
               MyTextfield(
-                hintText: "",
+                hintText: "Email",
                 obscureText: false,
                 controller: emailController,
               ),
@@ -54,7 +87,7 @@ class LoginPage extends StatelessWidget {
 
               // password textfield
               MyTextfield(
-                hintText: "",
+                hintText: "Password",
                 obscureText: true,
                 controller: passwordController,
               ),
@@ -89,7 +122,7 @@ class LoginPage extends StatelessWidget {
                 children: [
                   Text("Don't have an account? "),
                   GestureDetector(
-                    onTap: onTap,
+                    onTap: widget.onTap,
                     child: Text(
                       "Register here",
                       style: TextStyle(
